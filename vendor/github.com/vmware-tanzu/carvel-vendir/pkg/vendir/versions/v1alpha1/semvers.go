@@ -1,4 +1,4 @@
-package versions
+package v1alpha1
 
 import (
 	"fmt"
