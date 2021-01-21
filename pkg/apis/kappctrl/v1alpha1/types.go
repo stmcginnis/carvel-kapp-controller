@@ -68,6 +68,9 @@ type AppStatus struct {
 	Deploy   *AppStatusDeploy   `json:"deploy,omitempty"`
 	Inspect  *AppStatusInspect  `json:"inspect,omitempty"`
 
+	ReconcilesSinceLastSuccess int
+	ReconcilesSinceLastFailure int
+
 	ObservedGeneration int64          `json:"observedGeneration"`
 	Conditions         []AppCondition `json:"conditions"`
 

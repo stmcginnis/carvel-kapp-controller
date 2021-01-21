@@ -5,6 +5,7 @@ package app
 
 import (
 	"fmt"
+	"math"
 	"time"
 
 	"github.com/vmware-tanzu/carvel-kapp-controller/pkg/apis/kappctrl/v1alpha1"
@@ -221,6 +222,8 @@ func (a *App) setReconcileCompleted(result exec.CmdRunResult) {
 			Status:  corev1.ConditionTrue,
 			Message: result.ErrorStr(),
 		})
+		a.app.Status.ReconcilesSinceLastFailure++
+		a.app.Status.ReconcilesSinceLastSuccess = 0
 		a.app.Status.FriendlyDescription = fmt.Sprintf("Reconcile failed: %s", result.ErrorStr())
 	} else {
 		a.app.Status.Conditions = append(a.app.Status.Conditions, v1alpha1.AppCondition{
@@ -228,6 +231,8 @@ func (a *App) setReconcileCompleted(result exec.CmdRunResult) {
 			Status:  corev1.ConditionTrue,
 			Message: "",
 		})
+		a.app.Status.ReconcilesSinceLastSuccess++
+		a.app.Status.ReconcilesSinceLastFailure = 0
 		a.app.Status.FriendlyDescription = "Reconcile succeeded"
 	}
 }
@@ -282,9 +287,12 @@ func (a *App) requeueIfNecessary() reconcile.Result {
 }
 
 func (a *App) shouldReconcile(timeAt time.Time) bool {
-	const (
-		tooLongAfterFailure = 3 * time.Second
-	)
+	tooLongAfterFailure := time.Duration(math.Exp2(float64(a.app.Status.ReconcilesSinceLastFailure))) * time.Second
+	if tooLongAfterFailure > a.syncPeriod() {
+		// cap the backoff at sync period
+		tooLongAfterFailure = a.syncPeriod()
+	}
+
 	tooLongAfterSuccess := a.syncPeriod()
 
 	// Did resource spec change?
@@ -298,8 +306,8 @@ func (a *App) shouldReconcile(timeAt time.Time) bool {
 	}
 
 	// Did we deploy at least once?
-	lastDeploy := a.app.Status.Deploy
-	if lastDeploy == nil {
+	lastFetch := a.app.Status.Fetch
+	if lastFetch == nil {
 		return true
 	}
 
@@ -307,14 +315,14 @@ func (a *App) shouldReconcile(timeAt time.Time) bool {
 	for _, cond := range a.app.Status.Conditions {
 		if cond.Type == v1alpha1.ReconcileFailed {
 			// Did we try too long ago?
-			if timeAt.UTC().Sub(lastDeploy.UpdatedAt.Time) > tooLongAfterFailure {
+			if timeAt.UTC().Sub(lastFetch.UpdatedAt.Time) > tooLongAfterFailure {
 				return true
 			}
 		}
 	}
 
 	// Did we deploy too long ago?
-	if timeAt.UTC().Sub(lastDeploy.UpdatedAt.Time) > tooLongAfterSuccess {
+	if timeAt.UTC().Sub(lastFetch.UpdatedAt.Time) > tooLongAfterSuccess {
 		return true
 	}
 
