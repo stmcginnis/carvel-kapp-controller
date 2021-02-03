@@ -10,8 +10,10 @@ import (
 )
 
 // InstalledPkgLister helps list InstalledPkgs.
+// All objects returned here must be treated as read-only.
 type InstalledPkgLister interface {
 	// List lists all InstalledPkgs in the indexer.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1alpha1.InstalledPkg, err error)
 	// InstalledPkgs returns an object that can list and get InstalledPkgs.
 	InstalledPkgs(namespace string) InstalledPkgNamespaceLister
@@ -42,10 +44,13 @@ func (s *installedPkgLister) InstalledPkgs(namespace string) InstalledPkgNamespa
 }
 
 // InstalledPkgNamespaceLister helps list and get InstalledPkgs.
+// All objects returned here must be treated as read-only.
 type InstalledPkgNamespaceLister interface {
 	// List lists all InstalledPkgs in the indexer for a given namespace.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1alpha1.InstalledPkg, err error)
 	// Get retrieves the InstalledPkg from the indexer for a given namespace and name.
+	// Objects returned here must be treated as read-only.
 	Get(name string) (*v1alpha1.InstalledPkg, error)
 	InstalledPkgNamespaceListerExpansion
 }

@@ -3,6 +3,7 @@
 package v1alpha1
 
 import (
+	"context"
 	time "time"
 
 	kappctrlv1alpha1 "github.com/vmware-tanzu/carvel-kapp-controller/pkg/apis/kappctrl/v1alpha1"
@@ -44,13 +45,13 @@ func NewFilteredPkgInformer(client versioned.Interface, resyncPeriod time.Durati
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.KappctrlV1alpha1().Pkgs().List(options)
+				return client.KappctrlV1alpha1().Pkgs().List(context.TODO(), options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.KappctrlV1alpha1().Pkgs().Watch(options)
+				return client.KappctrlV1alpha1().Pkgs().Watch(context.TODO(), options)
 			},
 		},
 		&kappctrlv1alpha1.Pkg{},

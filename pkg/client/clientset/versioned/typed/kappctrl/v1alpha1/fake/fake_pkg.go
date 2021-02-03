@@ -3,6 +3,8 @@
 package fake
 
 import (
+	"context"
+
 	v1alpha1 "github.com/vmware-tanzu/carvel-kapp-controller/pkg/apis/kappctrl/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
@@ -22,7 +24,7 @@ var pkgsResource = schema.GroupVersionResource{Group: "kappctrl", Version: "v1al
 var pkgsKind = schema.GroupVersionKind{Group: "kappctrl", Version: "v1alpha1", Kind: "Pkg"}
 
 // Get takes name of the pkg, and returns the corresponding pkg object, and an error if there is any.
-func (c *FakePkgs) Get(name string, options v1.GetOptions) (result *v1alpha1.Pkg, err error) {
+func (c *FakePkgs) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.Pkg, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewRootGetAction(pkgsResource, name), &v1alpha1.Pkg{})
 	if obj == nil {
@@ -32,7 +34,7 @@ func (c *FakePkgs) Get(name string, options v1.GetOptions) (result *v1alpha1.Pkg
 }
 
 // List takes label and field selectors, and returns the list of Pkgs that match those selectors.
-func (c *FakePkgs) List(opts v1.ListOptions) (result *v1alpha1.PkgList, err error) {
+func (c *FakePkgs) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.PkgList, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewRootListAction(pkgsResource, pkgsKind, opts), &v1alpha1.PkgList{})
 	if obj == nil {
@@ -53,13 +55,13 @@ func (c *FakePkgs) List(opts v1.ListOptions) (result *v1alpha1.PkgList, err erro
 }
 
 // Watch returns a watch.Interface that watches the requested pkgs.
-func (c *FakePkgs) Watch(opts v1.ListOptions) (watch.Interface, error) {
+func (c *FakePkgs) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
 		InvokesWatch(testing.NewRootWatchAction(pkgsResource, opts))
 }
 
 // Create takes the representation of a pkg and creates it.  Returns the server's representation of the pkg, and an error, if there is any.
-func (c *FakePkgs) Create(pkg *v1alpha1.Pkg) (result *v1alpha1.Pkg, err error) {
+func (c *FakePkgs) Create(ctx context.Context, pkg *v1alpha1.Pkg, opts v1.CreateOptions) (result *v1alpha1.Pkg, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewRootCreateAction(pkgsResource, pkg), &v1alpha1.Pkg{})
 	if obj == nil {
@@ -69,7 +71,7 @@ func (c *FakePkgs) Create(pkg *v1alpha1.Pkg) (result *v1alpha1.Pkg, err error) {
 }
 
 // Update takes the representation of a pkg and updates it. Returns the server's representation of the pkg, and an error, if there is any.
-func (c *FakePkgs) Update(pkg *v1alpha1.Pkg) (result *v1alpha1.Pkg, err error) {
+func (c *FakePkgs) Update(ctx context.Context, pkg *v1alpha1.Pkg, opts v1.UpdateOptions) (result *v1alpha1.Pkg, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewRootUpdateAction(pkgsResource, pkg), &v1alpha1.Pkg{})
 	if obj == nil {
@@ -80,7 +82,7 @@ func (c *FakePkgs) Update(pkg *v1alpha1.Pkg) (result *v1alpha1.Pkg, err error) {
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakePkgs) UpdateStatus(pkg *v1alpha1.Pkg) (*v1alpha1.Pkg, error) {
+func (c *FakePkgs) UpdateStatus(ctx context.Context, pkg *v1alpha1.Pkg, opts v1.UpdateOptions) (*v1alpha1.Pkg, error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewRootUpdateSubresourceAction(pkgsResource, "status", pkg), &v1alpha1.Pkg{})
 	if obj == nil {
@@ -90,22 +92,22 @@ func (c *FakePkgs) UpdateStatus(pkg *v1alpha1.Pkg) (*v1alpha1.Pkg, error) {
 }
 
 // Delete takes name of the pkg and deletes it. Returns an error if one occurs.
-func (c *FakePkgs) Delete(name string, options *v1.DeleteOptions) error {
+func (c *FakePkgs) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
 		Invokes(testing.NewRootDeleteAction(pkgsResource, name), &v1alpha1.Pkg{})
 	return err
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *FakePkgs) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
-	action := testing.NewRootDeleteCollectionAction(pkgsResource, listOptions)
+func (c *FakePkgs) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
+	action := testing.NewRootDeleteCollectionAction(pkgsResource, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v1alpha1.PkgList{})
 	return err
 }
 
 // Patch applies the patch and returns the patched pkg.
-func (c *FakePkgs) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.Pkg, err error) {
+func (c *FakePkgs) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.Pkg, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewRootPatchSubresourceAction(pkgsResource, name, pt, data, subresources...), &v1alpha1.Pkg{})
 	if obj == nil {

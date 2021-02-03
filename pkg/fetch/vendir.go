@@ -2,6 +2,7 @@ package fetch
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 
@@ -273,7 +274,7 @@ func (v *Vendir) helmChartResources(helmChart vendirconf.DirectoryContentsHelmCh
 }
 
 func (v *Vendir) secretBytes(secretRef vendirconf.DirectoryContentsLocalRef) ([]byte, error) {
-	secret, err := v.coreClient.CoreV1().Secrets(v.nsName).Get(secretRef.Name, metav1.GetOptions{})
+	secret, err := v.coreClient.CoreV1().Secrets(v.nsName).Get(context.Background(), secretRef.Name, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -286,7 +287,7 @@ func (v *Vendir) secretBytes(secretRef vendirconf.DirectoryContentsLocalRef) ([]
 }
 
 func (v *Vendir) configMapBytes(configMapRef vendirconf.DirectoryContentsLocalRef) ([]byte, error) {
-	configMap, err := v.coreClient.CoreV1().ConfigMaps(v.nsName).Get(configMapRef.Name, metav1.GetOptions{})
+	configMap, err := v.coreClient.CoreV1().ConfigMaps(v.nsName).Get(context.Background(), configMapRef.Name, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}

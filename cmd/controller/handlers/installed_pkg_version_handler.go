@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"context"
+
 	"github.com/go-logr/logr"
 	kcclient "github.com/vmware-tanzu/carvel-kapp-controller/pkg/client/clientset/versioned"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -59,7 +61,7 @@ func (ipvh *InstalledPkgVersionHandler) Generic(evt event.GenericEvent, q workqu
 }
 
 func (ipvh *InstalledPkgVersionHandler) enqueueAllPackages(q workqueue.RateLimitingInterface) error {
-	installedPkgList, err := ipvh.client.KappctrlV1alpha1().InstalledPkgs("").List(metav1.ListOptions{})
+	installedPkgList, err := ipvh.client.KappctrlV1alpha1().InstalledPkgs("").List(context.Background(), metav1.ListOptions{})
 	if err != nil {
 		return err
 	}

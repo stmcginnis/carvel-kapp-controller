@@ -3,6 +3,7 @@
 package v1alpha1
 
 import (
+	"context"
 	"time"
 
 	v1alpha1 "github.com/vmware-tanzu/carvel-kapp-controller/pkg/apis/kappctrl/v1alpha1"
@@ -21,15 +22,15 @@ type PkgsGetter interface {
 
 // PkgInterface has methods to work with Pkg resources.
 type PkgInterface interface {
-	Create(*v1alpha1.Pkg) (*v1alpha1.Pkg, error)
-	Update(*v1alpha1.Pkg) (*v1alpha1.Pkg, error)
-	UpdateStatus(*v1alpha1.Pkg) (*v1alpha1.Pkg, error)
-	Delete(name string, options *v1.DeleteOptions) error
-	DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error
-	Get(name string, options v1.GetOptions) (*v1alpha1.Pkg, error)
-	List(opts v1.ListOptions) (*v1alpha1.PkgList, error)
-	Watch(opts v1.ListOptions) (watch.Interface, error)
-	Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.Pkg, err error)
+	Create(ctx context.Context, pkg *v1alpha1.Pkg, opts v1.CreateOptions) (*v1alpha1.Pkg, error)
+	Update(ctx context.Context, pkg *v1alpha1.Pkg, opts v1.UpdateOptions) (*v1alpha1.Pkg, error)
+	UpdateStatus(ctx context.Context, pkg *v1alpha1.Pkg, opts v1.UpdateOptions) (*v1alpha1.Pkg, error)
+	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
+	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
+	Get(ctx context.Context, name string, opts v1.GetOptions) (*v1alpha1.Pkg, error)
+	List(ctx context.Context, opts v1.ListOptions) (*v1alpha1.PkgList, error)
+	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.Pkg, err error)
 	PkgExpansion
 }
 
@@ -46,19 +47,19 @@ func newPkgs(c *KappctrlV1alpha1Client) *pkgs {
 }
 
 // Get takes name of the pkg, and returns the corresponding pkg object, and an error if there is any.
-func (c *pkgs) Get(name string, options v1.GetOptions) (result *v1alpha1.Pkg, err error) {
+func (c *pkgs) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.Pkg, err error) {
 	result = &v1alpha1.Pkg{}
 	err = c.client.Get().
 		Resource("pkgs").
 		Name(name).
 		VersionedParams(&options, scheme.ParameterCodec).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }
 
 // List takes label and field selectors, and returns the list of Pkgs that match those selectors.
-func (c *pkgs) List(opts v1.ListOptions) (result *v1alpha1.PkgList, err error) {
+func (c *pkgs) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.PkgList, err error) {
 	var timeout time.Duration
 	if opts.TimeoutSeconds != nil {
 		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
@@ -68,13 +69,13 @@ func (c *pkgs) List(opts v1.ListOptions) (result *v1alpha1.PkgList, err error) {
 		Resource("pkgs").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }
 
 // Watch returns a watch.Interface that watches the requested pkgs.
-func (c *pkgs) Watch(opts v1.ListOptions) (watch.Interface, error) {
+func (c *pkgs) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	var timeout time.Duration
 	if opts.TimeoutSeconds != nil {
 		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
@@ -84,81 +85,84 @@ func (c *pkgs) Watch(opts v1.ListOptions) (watch.Interface, error) {
 		Resource("pkgs").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
-		Watch()
+		Watch(ctx)
 }
 
 // Create takes the representation of a pkg and creates it.  Returns the server's representation of the pkg, and an error, if there is any.
-func (c *pkgs) Create(pkg *v1alpha1.Pkg) (result *v1alpha1.Pkg, err error) {
+func (c *pkgs) Create(ctx context.Context, pkg *v1alpha1.Pkg, opts v1.CreateOptions) (result *v1alpha1.Pkg, err error) {
 	result = &v1alpha1.Pkg{}
 	err = c.client.Post().
 		Resource("pkgs").
+		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(pkg).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }
 
 // Update takes the representation of a pkg and updates it. Returns the server's representation of the pkg, and an error, if there is any.
-func (c *pkgs) Update(pkg *v1alpha1.Pkg) (result *v1alpha1.Pkg, err error) {
+func (c *pkgs) Update(ctx context.Context, pkg *v1alpha1.Pkg, opts v1.UpdateOptions) (result *v1alpha1.Pkg, err error) {
 	result = &v1alpha1.Pkg{}
 	err = c.client.Put().
 		Resource("pkgs").
 		Name(pkg.Name).
+		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(pkg).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-
-func (c *pkgs) UpdateStatus(pkg *v1alpha1.Pkg) (result *v1alpha1.Pkg, err error) {
+func (c *pkgs) UpdateStatus(ctx context.Context, pkg *v1alpha1.Pkg, opts v1.UpdateOptions) (result *v1alpha1.Pkg, err error) {
 	result = &v1alpha1.Pkg{}
 	err = c.client.Put().
 		Resource("pkgs").
 		Name(pkg.Name).
 		SubResource("status").
+		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(pkg).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }
 
 // Delete takes name of the pkg and deletes it. Returns an error if one occurs.
-func (c *pkgs) Delete(name string, options *v1.DeleteOptions) error {
+func (c *pkgs) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	return c.client.Delete().
 		Resource("pkgs").
 		Name(name).
-		Body(options).
-		Do().
+		Body(&opts).
+		Do(ctx).
 		Error()
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *pkgs) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
+func (c *pkgs) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
 	var timeout time.Duration
-	if listOptions.TimeoutSeconds != nil {
-		timeout = time.Duration(*listOptions.TimeoutSeconds) * time.Second
+	if listOpts.TimeoutSeconds != nil {
+		timeout = time.Duration(*listOpts.TimeoutSeconds) * time.Second
 	}
 	return c.client.Delete().
 		Resource("pkgs").
-		VersionedParams(&listOptions, scheme.ParameterCodec).
+		VersionedParams(&listOpts, scheme.ParameterCodec).
 		Timeout(timeout).
-		Body(options).
-		Do().
+		Body(&opts).
+		Do(ctx).
 		Error()
 }
 
 // Patch applies the patch and returns the patched pkg.
-func (c *pkgs) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.Pkg, err error) {
+func (c *pkgs) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.Pkg, err error) {
 	result = &v1alpha1.Pkg{}
 	err = c.client.Patch(pt).
 		Resource("pkgs").
-		SubResource(subresources...).
 		Name(name).
+		SubResource(subresources...).
+		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(data).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }

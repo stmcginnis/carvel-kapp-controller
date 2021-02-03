@@ -10,10 +10,13 @@ import (
 )
 
 // PkgLister helps list Pkgs.
+// All objects returned here must be treated as read-only.
 type PkgLister interface {
 	// List lists all Pkgs in the indexer.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1alpha1.Pkg, err error)
 	// Get retrieves the Pkg from the index for a given name.
+	// Objects returned here must be treated as read-only.
 	Get(name string) (*v1alpha1.Pkg, error)
 	PkgListerExpansion
 }

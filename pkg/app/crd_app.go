@@ -4,6 +4,7 @@
 package app
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 
@@ -73,7 +74,7 @@ func (a *CRDApp) unblockDeletion() error {
 func (a *CRDApp) updateStatus(desc string) error {
 	a.log.Info("Updating status", "desc", desc)
 
-	existingApp, err := a.appClient.KappctrlV1alpha1().Apps(a.appModel.Namespace).Get(a.appModel.Name, metav1.GetOptions{})
+	existingApp, err := a.appClient.KappctrlV1alpha1().Apps(a.appModel.Namespace).Get(context.Background(), a.appModel.Name, metav1.GetOptions{})
 	if err != nil {
 		return fmt.Errorf("Fetching app: %s", err)
 	}
@@ -81,7 +82,7 @@ func (a *CRDApp) updateStatus(desc string) error {
 	if !reflect.DeepEqual(existingApp.Status, a.app.Status()) {
 		existingApp.Status = a.app.Status()
 
-		_, err = a.appClient.KappctrlV1alpha1().Apps(existingApp.Namespace).UpdateStatus(existingApp)
+		_, err = a.appClient.KappctrlV1alpha1().Apps(existingApp.Namespace).UpdateStatus(context.Background(), existingApp, metav1.UpdateOptions{})
 		if err != nil {
 			return fmt.Errorf("Updating app status: %s", err)
 		}
@@ -93,14 +94,14 @@ func (a *CRDApp) updateStatus(desc string) error {
 func (a *CRDApp) updateApp(updateFunc func(*kcv1alpha1.App)) error {
 	a.log.Info("Updating app")
 
-	existingApp, err := a.appClient.KappctrlV1alpha1().Apps(a.appModel.Namespace).Get(a.appModel.Name, metav1.GetOptions{})
+	existingApp, err := a.appClient.KappctrlV1alpha1().Apps(a.appModel.Namespace).Get(context.Background(), a.appModel.Name, metav1.GetOptions{})
 	if err != nil {
 		return fmt.Errorf("Updating app: %s", err)
 	}
 
 	updateFunc(existingApp)
 
-	_, err = a.appClient.KappctrlV1alpha1().Apps(existingApp.Namespace).Update(existingApp)
+	_, err = a.appClient.KappctrlV1alpha1().Apps(existingApp.Namespace).Update(context.Background(), existingApp, metav1.UpdateOptions{})
 	if err != nil {
 		return fmt.Errorf("Updating app: %s", err)
 	}

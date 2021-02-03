@@ -4,10 +4,10 @@
 package installedpkg
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/go-logr/logr"
-	"github.com/vmware-tanzu/carvel-kapp-controller/pkg/apis/kappctrl/v1alpha1"
 	kcv1alpha1 "github.com/vmware-tanzu/carvel-kapp-controller/pkg/apis/kappctrl/v1alpha1"
 	kcclient "github.com/vmware-tanzu/carvel-kapp-controller/pkg/client/clientset/versioned"
 	"github.com/vmware-tanzu/carvel-kapp-controller/pkg/reconciler"
@@ -69,7 +69,7 @@ func (ip *InstalledPackageCR) reconcile(modelStatus *reconciler.Status) (reconci
 
 	ip.model.Status.Version = pkg.Spec.Version
 
-	existingApp, err := ip.client.KappctrlV1alpha1().Apps(ip.model.Namespace).Get(ip.model.Name, metav1.GetOptions{})
+	existingApp, err := ip.client.KappctrlV1alpha1().Apps(ip.model.Namespace).Get(context.Background(), ip.model.Name, metav1.GetOptions{})
 	if err != nil {
 		if errors.IsNotFound(err) {
 			return ip.createAppFromPackage(pkg)
@@ -92,12 +92,12 @@ func (ip *InstalledPackageCR) reconcile(modelStatus *reconciler.Status) (reconci
 }
 
 func (ip *InstalledPackageCR) createAppFromPackage(pkg kcv1alpha1.Pkg) (reconcile.Result, error) {
-	desiredApp, err := NewApp(&v1alpha1.App{}, ip.model, pkg)
+	desiredApp, err := NewApp(&kcv1alpha1.App{}, ip.model, pkg)
 	if err != nil {
 		return reconcile.Result{Requeue: true}, err
 	}
 
-	_, err = ip.client.KappctrlV1alpha1().Apps(desiredApp.Namespace).Create(desiredApp)
+	_, err = ip.client.KappctrlV1alpha1().Apps(desiredApp.Namespace).Create(context.Background(), desiredApp, metav1.CreateOptions{})
 	if err != nil {
 		return reconcile.Result{Requeue: true}, err
 	}
@@ -112,7 +112,7 @@ func (ip *InstalledPackageCR) reconcileAppWithPackage(existingApp *kcv1alpha1.Ap
 	}
 
 	if !equality.Semantic.DeepEqual(desiredApp, existingApp) {
-		_, err = ip.client.KappctrlV1alpha1().Apps(desiredApp.Namespace).Update(desiredApp)
+		_, err = ip.client.KappctrlV1alpha1().Apps(desiredApp.Namespace).Update(context.Background(), desiredApp, metav1.UpdateOptions{})
 		if err != nil {
 			return reconcile.Result{Requeue: true}, err
 		}
@@ -126,14 +126,14 @@ func (ip *InstalledPackageCR) referencedPkg() (kcv1alpha1.Pkg, error) {
 
 	switch {
 	case ip.model.Spec.PkgRef.Version != "" && ip.model.Spec.PkgRef.VersionSelection != nil:
-		return v1alpha1.Pkg{}, fmt.Errorf("Cannot use 'version' with 'versionSelection'")
+		return kcv1alpha1.Pkg{}, fmt.Errorf("Cannot use 'version' with 'versionSelection'")
 	case ip.model.Spec.PkgRef.Version != "":
 		semverConfig = &versions.VersionSelectionSemver{Constraints: ip.model.Spec.PkgRef.Version}
 	case ip.model.Spec.PkgRef.VersionSelection != nil:
 		semverConfig = ip.model.Spec.PkgRef.VersionSelection
 	}
 
-	pkgList, err := ip.client.KappctrlV1alpha1().Pkgs().List(metav1.ListOptions{})
+	pkgList, err := ip.client.KappctrlV1alpha1().Pkgs().List(context.Background(), metav1.ListOptions{})
 	if err != nil {
 		return kcv1alpha1.Pkg{}, err
 	}
@@ -163,7 +163,7 @@ func (ip *InstalledPackageCR) referencedPkg() (kcv1alpha1.Pkg, error) {
 
 func (r *InstalledPackageCR) updateStatus() error {
 	if !equality.Semantic.DeepEqual(r.unmodifiedModel.Status, r.model.Status) {
-		_, err := r.client.KappctrlV1alpha1().InstalledPkgs(r.model.Namespace).UpdateStatus(r.model)
+		_, err := r.client.KappctrlV1alpha1().InstalledPkgs(r.model.Namespace).UpdateStatus(context.Background(), r.model, metav1.UpdateOptions{})
 		if err != nil {
 			return fmt.Errorf("Updating installed pkg status: %s", err)
 		}

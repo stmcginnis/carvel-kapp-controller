@@ -1,14 +1,13 @@
 package installedpkg
 
 import (
-	"github.com/vmware-tanzu/carvel-kapp-controller/pkg/apis/kappctrl/v1alpha1"
 	kcv1alpha1 "github.com/vmware-tanzu/carvel-kapp-controller/pkg/apis/kappctrl/v1alpha1"
 	"github.com/vmware-tanzu/carvel-kapp-controller/pkg/client/clientset/versioned/scheme"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
-func NewApp(existingApp *v1alpha1.App, installedPkg *v1alpha1.InstalledPkg, pkg v1alpha1.Pkg) (*v1alpha1.App, error) {
+func NewApp(existingApp *kcv1alpha1.App, installedPkg *kcv1alpha1.InstalledPkg, pkg kcv1alpha1.Pkg) (*kcv1alpha1.App, error) {
 	desiredApp := existingApp.DeepCopy()
 
 	desiredApp.Name = installedPkg.Name
@@ -18,7 +17,7 @@ func NewApp(existingApp *v1alpha1.App, installedPkg *v1alpha1.InstalledPkg, pkg 
 
 	err := controllerutil.SetControllerReference(installedPkg, desiredApp, scheme.Scheme)
 	if err != nil {
-		return &v1alpha1.App{}, err
+		return &kcv1alpha1.App{}, err
 	}
 
 	for i, templateStep := range desiredApp.Spec.Template {

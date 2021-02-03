@@ -10,10 +10,13 @@ import (
 )
 
 // PkgRepositoryLister helps list PkgRepositories.
+// All objects returned here must be treated as read-only.
 type PkgRepositoryLister interface {
 	// List lists all PkgRepositories in the indexer.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1alpha1.PkgRepository, err error)
 	// Get retrieves the PkgRepository from the index for a given name.
+	// Objects returned here must be treated as read-only.
 	Get(name string) (*v1alpha1.PkgRepository, error)
 	PkgRepositoryListerExpansion
 }
