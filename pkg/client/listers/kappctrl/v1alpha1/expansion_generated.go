@@ -18,10 +18,6 @@ type InstalledPkgListerExpansion interface{}
 // InstalledPkgNamespaceLister.
 type InstalledPkgNamespaceListerExpansion interface{}
 
-// PkgListerExpansion allows custom methods to be added to
-// PkgLister.
-type PkgListerExpansion interface{}
-
 // PkgRepositoryListerExpansion allows custom methods to be added to
 // PkgRepositoryLister.
 type PkgRepositoryListerExpansion interface{}

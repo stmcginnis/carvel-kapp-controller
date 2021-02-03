@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	kappctrlv1alpha1 "github.com/vmware-tanzu/carvel-kapp-controller/pkg/client/clientset/versioned/typed/kappctrl/v1alpha1"
+	packagesv1alpha1 "github.com/vmware-tanzu/carvel-kapp-controller/pkg/client/clientset/versioned/typed/packages/v1alpha1"
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"
 	flowcontrol "k8s.io/client-go/util/flowcontrol"
@@ -14,6 +15,7 @@ import (
 type Interface interface {
 	Discovery() discovery.DiscoveryInterface
 	KappctrlV1alpha1() kappctrlv1alpha1.KappctrlV1alpha1Interface
+	PackagesV1alpha1() packagesv1alpha1.PackagesV1alpha1Interface
 }
 
 // Clientset contains the clients for groups. Each group has exactly one
@@ -21,11 +23,17 @@ type Interface interface {
 type Clientset struct {
 	*discovery.DiscoveryClient
 	kappctrlV1alpha1 *kappctrlv1alpha1.KappctrlV1alpha1Client
+	packagesV1alpha1 *packagesv1alpha1.PackagesV1alpha1Client
 }
 
 // KappctrlV1alpha1 retrieves the KappctrlV1alpha1Client
 func (c *Clientset) KappctrlV1alpha1() kappctrlv1alpha1.KappctrlV1alpha1Interface {
 	return c.kappctrlV1alpha1
+}
+
+// PackagesV1alpha1 retrieves the PackagesV1alpha1Client
+func (c *Clientset) PackagesV1alpha1() packagesv1alpha1.PackagesV1alpha1Interface {
+	return c.packagesV1alpha1
 }
 
 // Discovery retrieves the DiscoveryClient
@@ -53,6 +61,10 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 	if err != nil {
 		return nil, err
 	}
+	cs.packagesV1alpha1, err = packagesv1alpha1.NewForConfig(&configShallowCopy)
+	if err != nil {
+		return nil, err
+	}
 
 	cs.DiscoveryClient, err = discovery.NewDiscoveryClientForConfig(&configShallowCopy)
 	if err != nil {
@@ -66,6 +78,7 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 func NewForConfigOrDie(c *rest.Config) *Clientset {
 	var cs Clientset
 	cs.kappctrlV1alpha1 = kappctrlv1alpha1.NewForConfigOrDie(c)
+	cs.packagesV1alpha1 = packagesv1alpha1.NewForConfigOrDie(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClientForConfigOrDie(c)
 	return &cs
@@ -75,6 +88,7 @@ func NewForConfigOrDie(c *rest.Config) *Clientset {
 func New(c rest.Interface) *Clientset {
 	var cs Clientset
 	cs.kappctrlV1alpha1 = kappctrlv1alpha1.New(c)
+	cs.packagesV1alpha1 = packagesv1alpha1.New(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClient(c)
 	return &cs

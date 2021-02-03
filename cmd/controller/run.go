@@ -13,9 +13,12 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/vmware-tanzu/carvel-kapp-controller/cmd/controller/handlers"
 	kcv1alpha1 "github.com/vmware-tanzu/carvel-kapp-controller/pkg/apis/kappctrl/v1alpha1"
+	pkgv1alpha1 "github.com/vmware-tanzu/carvel-kapp-controller/pkg/apis/packages/v1alpha1"
+	serverconf "github.com/vmware-tanzu/carvel-kapp-controller/pkg/apiserver/config"
 	kcclient "github.com/vmware-tanzu/carvel-kapp-controller/pkg/client/clientset/versioned"
+	genericapiserver "k8s.io/apiserver/pkg/server"
+	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
-	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
@@ -68,10 +71,36 @@ func Run(opts Options, runLog logr.Logger) {
 		os.Exit(1)
 	}
 
+	// _, err = aggregatorclient.NewForConfig(restConfig)
+	// if err != nil {
+	// 	runLog.Error(err, "building aggregator client")
+	// 	os.Exit(1)
+	// }
+
 	appFactory := AppFactory{
 		coreClient: coreClient,
 		appClient:  kcClient,
 	}
+
+	// create apiserver
+	serverConfig, err := serverconf.NewConfig()
+	if err != nil {
+		runLog.Error(err, "building server config")
+		os.Exit(1)
+	}
+
+	informerFactory := informers.NewSharedInformerFactory(coreClient, 12*time.Hour)
+
+	server, err := serverConfig.Complete(informerFactory).New("kapp-controller-apiserver", genericapiserver.NewEmptyDelegate())
+	if err != nil {
+		runLog.Error(err, "building apiserver")
+		os.Exit(1)
+	}
+
+	// start everything
+	stopCh := make(<-chan struct{})
+	go informerFactory.Start(stopCh)
+	go server.PrepareRun().Run(stopCh)
 
 	{ // add controller for apps
 		ctrlAppOpts := controller.Options{
@@ -120,7 +149,7 @@ func Run(opts Options, runLog logr.Logger) {
 			os.Exit(1)
 		}
 
-		err = installedPkgCtrl.Watch(&source.Kind{Type: &kcv1alpha1.Pkg{}}, handlers.NewInstalledPkgVersionHandler(kcClient, runLog.WithName("handler")))
+		err = installedPkgCtrl.Watch(&source.Kind{Type: &pkgv1alpha1.Pkg{}}, handlers.NewInstalledPkgVersionHandler(kcClient, runLog.WithName("handler")))
 		if err != nil {
 			runLog.Error(err, "unable to watch *kcv1alpha1.Pkg for InstalledPkg")
 			os.Exit(1)

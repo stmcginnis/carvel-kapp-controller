@@ -6,6 +6,8 @@ import (
 	clientset "github.com/vmware-tanzu/carvel-kapp-controller/pkg/client/clientset/versioned"
 	kappctrlv1alpha1 "github.com/vmware-tanzu/carvel-kapp-controller/pkg/client/clientset/versioned/typed/kappctrl/v1alpha1"
 	fakekappctrlv1alpha1 "github.com/vmware-tanzu/carvel-kapp-controller/pkg/client/clientset/versioned/typed/kappctrl/v1alpha1/fake"
+	packagesv1alpha1 "github.com/vmware-tanzu/carvel-kapp-controller/pkg/client/clientset/versioned/typed/packages/v1alpha1"
+	fakepackagesv1alpha1 "github.com/vmware-tanzu/carvel-kapp-controller/pkg/client/clientset/versioned/typed/packages/v1alpha1/fake"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/discovery"
@@ -63,4 +65,9 @@ var _ clientset.Interface = &Clientset{}
 // KappctrlV1alpha1 retrieves the KappctrlV1alpha1Client
 func (c *Clientset) KappctrlV1alpha1() kappctrlv1alpha1.KappctrlV1alpha1Interface {
 	return &fakekappctrlv1alpha1.FakeKappctrlV1alpha1{Fake: &c.Fake}
+}
+
+// PackagesV1alpha1 retrieves the PackagesV1alpha1Client
+func (c *Clientset) PackagesV1alpha1() packagesv1alpha1.PackagesV1alpha1Interface {
+	return &fakepackagesv1alpha1.FakePackagesV1alpha1{Fake: &c.Fake}
 }

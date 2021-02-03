@@ -12,8 +12,6 @@ type Interface interface {
 	Apps() AppInformer
 	// InstalledPkgs returns a InstalledPkgInformer.
 	InstalledPkgs() InstalledPkgInformer
-	// Pkgs returns a PkgInformer.
-	Pkgs() PkgInformer
 	// PkgRepositories returns a PkgRepositoryInformer.
 	PkgRepositories() PkgRepositoryInformer
 }
@@ -37,11 +35,6 @@ func (v *version) Apps() AppInformer {
 // InstalledPkgs returns a InstalledPkgInformer.
 func (v *version) InstalledPkgs() InstalledPkgInformer {
 	return &installedPkgInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
-}
-
-// Pkgs returns a PkgInformer.
-func (v *version) Pkgs() PkgInformer {
-	return &pkgInformer{factory: v.factory, tweakListOptions: v.tweakListOptions}
 }
 
 // PkgRepositories returns a PkgRepositoryInformer.

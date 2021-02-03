@@ -12,7 +12,6 @@ type KappctrlV1alpha1Interface interface {
 	RESTClient() rest.Interface
 	AppsGetter
 	InstalledPkgsGetter
-	PkgsGetter
 	PkgRepositoriesGetter
 }
 
@@ -27,10 +26,6 @@ func (c *KappctrlV1alpha1Client) Apps(namespace string) AppInterface {
 
 func (c *KappctrlV1alpha1Client) InstalledPkgs(namespace string) InstalledPkgInterface {
 	return newInstalledPkgs(c, namespace)
-}
-
-func (c *KappctrlV1alpha1Client) Pkgs() PkgInterface {
-	return newPkgs(c)
 }
 
 func (c *KappctrlV1alpha1Client) PkgRepositories() PkgRepositoryInterface {

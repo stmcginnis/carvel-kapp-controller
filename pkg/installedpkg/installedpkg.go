@@ -9,6 +9,7 @@ import (
 
 	"github.com/go-logr/logr"
 	kcv1alpha1 "github.com/vmware-tanzu/carvel-kapp-controller/pkg/apis/kappctrl/v1alpha1"
+	pkgv1alpha1 "github.com/vmware-tanzu/carvel-kapp-controller/pkg/apis/packages/v1alpha1"
 	kcclient "github.com/vmware-tanzu/carvel-kapp-controller/pkg/client/clientset/versioned"
 	"github.com/vmware-tanzu/carvel-kapp-controller/pkg/reconciler"
 	versions "github.com/vmware-tanzu/carvel-vendir/pkg/vendir/versions/v1alpha1"
@@ -91,7 +92,7 @@ func (ip *InstalledPackageCR) reconcile(modelStatus *reconciler.Status) (reconci
 	return ip.reconcileAppWithPackage(existingApp, pkg)
 }
 
-func (ip *InstalledPackageCR) createAppFromPackage(pkg kcv1alpha1.Pkg) (reconcile.Result, error) {
+func (ip *InstalledPackageCR) createAppFromPackage(pkg pkgv1alpha1.Pkg) (reconcile.Result, error) {
 	desiredApp, err := NewApp(&kcv1alpha1.App{}, ip.model, pkg)
 	if err != nil {
 		return reconcile.Result{Requeue: true}, err
@@ -105,7 +106,7 @@ func (ip *InstalledPackageCR) createAppFromPackage(pkg kcv1alpha1.Pkg) (reconcil
 	return reconcile.Result{}, nil
 }
 
-func (ip *InstalledPackageCR) reconcileAppWithPackage(existingApp *kcv1alpha1.App, pkg kcv1alpha1.Pkg) (reconcile.Result, error) {
+func (ip *InstalledPackageCR) reconcileAppWithPackage(existingApp *kcv1alpha1.App, pkg pkgv1alpha1.Pkg) (reconcile.Result, error) {
 	desiredApp, err := NewApp(existingApp, ip.model, pkg)
 	if err != nil {
 		return reconcile.Result{Requeue: true}, err
@@ -121,25 +122,25 @@ func (ip *InstalledPackageCR) reconcileAppWithPackage(existingApp *kcv1alpha1.Ap
 	return reconcile.Result{}, nil
 }
 
-func (ip *InstalledPackageCR) referencedPkg() (kcv1alpha1.Pkg, error) {
+func (ip *InstalledPackageCR) referencedPkg() (pkgv1alpha1.Pkg, error) {
 	var semverConfig *versions.VersionSelectionSemver
 
 	switch {
 	case ip.model.Spec.PkgRef.Version != "" && ip.model.Spec.PkgRef.VersionSelection != nil:
-		return kcv1alpha1.Pkg{}, fmt.Errorf("Cannot use 'version' with 'versionSelection'")
+		return pkgv1alpha1.Pkg{}, fmt.Errorf("Cannot use 'version' with 'versionSelection'")
 	case ip.model.Spec.PkgRef.Version != "":
 		semverConfig = &versions.VersionSelectionSemver{Constraints: ip.model.Spec.PkgRef.Version}
 	case ip.model.Spec.PkgRef.VersionSelection != nil:
 		semverConfig = ip.model.Spec.PkgRef.VersionSelection
 	}
 
-	pkgList, err := ip.client.KappctrlV1alpha1().Pkgs().List(context.Background(), metav1.ListOptions{})
+	pkgList, err := ip.client.PackagesV1alpha1().Pkgs().List(context.Background(), metav1.ListOptions{})
 	if err != nil {
-		return kcv1alpha1.Pkg{}, err
+		return pkgv1alpha1.Pkg{}, err
 	}
 
 	var versionStrs []string
-	versionToPkg := map[string]kcv1alpha1.Pkg{}
+	versionToPkg := map[string]pkgv1alpha1.Pkg{}
 
 	for _, pkg := range pkgList.Items {
 		versionStrs = append(versionStrs, pkg.Spec.Version)
@@ -150,14 +151,14 @@ func (ip *InstalledPackageCR) referencedPkg() (kcv1alpha1.Pkg, error) {
 
 	selectedVersion, err := versions.HighestConstrainedVersion(versionStrs, verConfig)
 	if err != nil {
-		return kcv1alpha1.Pkg{}, err
+		return pkgv1alpha1.Pkg{}, err
 	}
 
 	if pkg, found := versionToPkg[selectedVersion]; found {
 		return pkg, nil
 	}
 
-	return kcv1alpha1.Pkg{}, fmt.Errorf("Could not find package with name '%s' and version '%s'",
+	return pkgv1alpha1.Pkg{}, fmt.Errorf("Could not find package with name '%s' and version '%s'",
 		ip.model.Spec.PkgRef.PublicName, selectedVersion)
 }
 

@@ -10,6 +10,7 @@ import (
 	versioned "github.com/vmware-tanzu/carvel-kapp-controller/pkg/client/clientset/versioned"
 	internalinterfaces "github.com/vmware-tanzu/carvel-kapp-controller/pkg/client/informers/externalversions/internalinterfaces"
 	kappctrl "github.com/vmware-tanzu/carvel-kapp-controller/pkg/client/informers/externalversions/kappctrl"
+	packages "github.com/vmware-tanzu/carvel-kapp-controller/pkg/client/informers/externalversions/packages"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -157,8 +158,13 @@ type SharedInformerFactory interface {
 	WaitForCacheSync(stopCh <-chan struct{}) map[reflect.Type]bool
 
 	Kappctrl() kappctrl.Interface
+	Packages() packages.Interface
 }
 
 func (f *sharedInformerFactory) Kappctrl() kappctrl.Interface {
 	return kappctrl.New(f, f.namespace, f.tweakListOptions)
+}
+
+func (f *sharedInformerFactory) Packages() packages.Interface {
+	return packages.New(f, f.namespace, f.tweakListOptions)
 }
